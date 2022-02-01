@@ -1,0 +1,45 @@
+name: Main
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install targets
+      run: sudo apt-get install -y mingw-w64; rustup target add x86_64-pc-windows-gnu; rustup target add x86_64-unknown-linux-gnu
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Build Linux
+      run: cargo build --target x86_64-unknown-linux-gnu --verbose --release
+    - name: Create Linux artifacts
+      run: mkdir staging; upx -9 -o staging/jsoncpl target/x86_64-unknown-linux-gnu/release/jsoncpl; cd staging; zip jsoncpl-linux.zip jsoncpl; tar -cvzf jsoncpl-linux.tar.gz jsoncpl; rm jsoncpl
+    - name: Build Windows
+      run: cargo build --target x86_64-pc-windows-gnu --verbose --release
+    - name: Create Windows artifacts
+      run: upx -9 -o staging/jsoncpl.exe target/x86_64-pc-windows-gnu/release/jsoncpl.exe; cd staging; zip jsoncpl-windows.zip jsoncpl.exe; tar -cvzf jsoncpl-windows.tar.gz jsoncpl.exe; rm jsoncpl.exe
+    - name: Build-musl macOS x86
+      uses: Shogan/rust-musl-action@v1.0.2
+      with:
+        args:
+          cargo build --target x86_64-apple-darwin --verbose --release
+    - name: Create MacOS artifacts
+      run: upx -9 -o staging/jsoncpl target/x86_64-apple-darwin/release/jsoncpl; cd staging; zip jsoncpl-macos.zip jsoncpl; tar -cvzf jsoncpl-macos.tar.gz jsoncpl; rm jsoncpl
+    - uses: marvinpinto/action-automatic-releases@latest
+      with:
+        automatic_release_tag: latest
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: true
+        files: staging/*
+    - uses: actions/upload-artifact@v2
+      with:
+        name: package
+        path: staging

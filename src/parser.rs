@@ -220,17 +220,3 @@ fn parse_file_test4() {
     let content = String::from(content);
     test_compare(content);
 }
-
-#[test]
-fn parse_file_de() {
-    let content = include_str!("../test0/de/common.json");
-    let content = String::from(content);
-    test_compare(content);
-}
-
-#[test]
-fn parse_file_en() {
-    let content = include_str!("../test0/en/common.json");
-    let content = String::from(content);
-    test_compare(content);
-}

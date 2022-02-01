@@ -410,6 +410,10 @@ fn check_key_parity(folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>) -> boo
         for (file_path, json) in file_paths {
             if !reference_content.contains_key(*file_path) {
                 reference_content.insert(*file_path, json.clone());
+            } else {
+                let reference_json = reference_content.remove(*file_path).unwrap();
+                let reference_json = combine_json(&reference_json, json, *file_path);
+                reference_content.insert(*file_path, reference_json);
             }
         }
     }
