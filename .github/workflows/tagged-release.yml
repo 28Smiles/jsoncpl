@@ -19,18 +19,18 @@ jobs:
     - name: Build Linux
       run: cargo build --target x86_64-unknown-linux-gnu --verbose --release
     - name: Create Linux artifacts
-      run: mkdir staging; upx -9 -o staging/jsonlint target/x86_64-unknown-linux-gnu/release/jsonlint; cd staging; zip jsonlint-linux.zip jsonlint; tar -cvzf jsonlint-linux.tar.gz jsonlint; rm jsonlint
+      run: mkdir staging; upx -9 -o staging/jsoncpl target/x86_64-unknown-linux-gnu/release/jsoncpl; cd staging; zip jsoncpl-linux.zip jsoncpl; tar -cvzf jsoncpl-linux.tar.gz jsoncpl; rm jsoncpl
     - name: Build Windows
       run: cargo build --target x86_64-pc-windows-gnu --verbose --release
     - name: Create Windows artifacts
-      run: upx -9 -o staging/jsonlint.exe target/x86_64-pc-windows-gnu/release/jsonlint.exe; cd staging; zip jsonlint-windows.zip jsonlint.exe; tar -cvzf jsonlint-windows.tar.gz jsonlint.exe; rm jsonlint.exe
+      run: upx -9 -o staging/jsoncpl.exe target/x86_64-pc-windows-gnu/release/jsoncpl.exe; cd staging; zip jsoncpl-windows.zip jsoncpl.exe; tar -cvzf jsoncpl-windows.tar.gz jsoncpl.exe; rm jsoncpl.exe
     - name: Build-musl macOS x86
       uses: Shogan/rust-musl-action@v1.0.2
       with:
         args:
           cargo build --target x86_64-apple-darwin --verbose --release
     - name: Create MacOS artifacts
-      run: upx -9 -o staging/jsonlint target/x86_64-apple-darwin/release/jsonlint; cd staging; zip jsonlint-macos.zip jsonlint; tar -cvzf jsonlint-macos.tar.gz jsonlint; rm jsonlint
+      run: upx -9 -o staging/jsoncpl target/x86_64-apple-darwin/release/jsoncpl; cd staging; zip jsoncpl-macos.zip jsoncpl; tar -cvzf jsoncpl-macos.tar.gz jsoncpl; rm jsoncpl
     - uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
