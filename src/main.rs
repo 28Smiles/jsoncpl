@@ -14,28 +14,30 @@ use std::process::exit;
 mod parser;
 
 #[derive(Parser)]
+#[clap(author, version, about, long_about = "A tool for linting json files")]
 struct Cli {
-    folders: Vec<String>,
+    #[clap(parse(from_os_str), about, long_about = "List the folders to search for files to lint and compare")]
+    folders: Vec<PathBuf>,
 
-    #[clap(short, long, arg_enum, default_value = "default")]
+    #[clap(short, long, arg_enum, default_value = "default", about, long_about = "The expected sorting algorithm for keys in the json file")]
     sort: SortingMode,
 
-    #[clap(short, long, arg_enum, default_value = "asc")]
+    #[clap(short, long, arg_enum, default_value = "asc", about, long_about = "The expected sort order for keys in the json file")]
     order: Order,
 
-    #[clap(long)]
+    #[clap(long, about, long_about = "Whether the files should be automatically formatted")]
     format: bool,
 
-    #[clap(long)]
+    #[clap(long, about, long_about = "Whether the style check should be skipped")]
     skip_check_style: bool,
 
-    #[clap(long)]
+    #[clap(long, about, long_about = "Whether the key order check should be skipped")]
     skip_check_order: bool,
 
-    #[clap(long)]
+    #[clap(long, about, long_about = "Whether the key parity check should be skipped")]
     skip_check_parity: bool,
 
-    #[clap(long, default_value = "4")]
+    #[clap(long, default_value = "4", about, long_about = "The expected indentation of the json files")]
     indent: i32,
 }
 
@@ -67,13 +69,12 @@ fn file_tree(base_path: &PathBuf, path: &PathBuf, mut files: Vec<PathBuf>) -> Ve
 }
 
 
-fn read_folders(args: &Cli) -> Vec<(PathBuf, Vec<PathBuf>)> {
-    let mut lang_content: Vec<(PathBuf, Vec<PathBuf>)> = Vec::new();
-    for folder in &args.folders {
-        let path = PathBuf::from(folder);
+fn read_folders(args: &Cli) -> Vec<(&PathBuf, Vec<PathBuf>)> {
+    let mut lang_content: Vec<(&PathBuf, Vec<PathBuf>)> = Vec::new();
+    for path in &args.folders {
         let content = file_tree(
-            &path,
-            &path,
+            path,
+            path,
             Vec::new()
         );
         lang_content.push((path, content));
@@ -82,7 +83,7 @@ fn read_folders(args: &Cli) -> Vec<(PathBuf, Vec<PathBuf>)> {
     lang_content
 }
 
-fn check_file_parity(files: &Vec<(PathBuf, Vec<PathBuf>)>) -> bool {
+fn check_file_parity(files: &Vec<(&PathBuf, Vec<PathBuf>)>) -> bool {
     let mut reference_content: BTreeSet<&PathBuf> = BTreeSet::new();
     let mut success = true;
     println!("Checking file parity in folders...");
@@ -179,14 +180,14 @@ fn lint(json: &JsonType, sorting_mode: &SortingMode, order: &Order) -> bool {
     }
 }
 
-fn format_files(args: &Cli, folders: &Vec<(PathBuf, Vec<PathBuf>)>) -> bool {
+fn format_files(args: &Cli, folders: &Vec<(&PathBuf, Vec<PathBuf>)>) -> bool {
     println!("Format files in folders...");
     let mut success = true;
     for (folder_path, file_paths) in folders {
         println!("Checking folder '{}':", folder_path.to_str().unwrap());
         for file_path in file_paths {
             println!("  Checking file '{}':", file_path.to_str().unwrap());
-            let mut path = folder_path.clone();
+            let mut path = (*folder_path).clone();
             path.push(file_path);
 
             if let Ok(file_content) = fs::read_to_string(&path) {
@@ -232,10 +233,10 @@ fn check_key_order(folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>, sorting
     success
 }
 
-fn read_files(file_paths: &Vec<(PathBuf, Vec<PathBuf>)>) -> Vec<(&PathBuf, Vec<(&PathBuf, String)>)> {
+fn read_files<'a, 'b>(file_paths: &'b Vec<(&'a PathBuf, Vec<PathBuf>)>) -> Vec<(&'a PathBuf, Vec<(&'b PathBuf, String)>)> {
     file_paths.iter().map(|(folder_path, file_paths)| {
-        (folder_path, file_paths.iter().map(|file_path| {
-            let mut path = folder_path.clone();
+        (*folder_path, file_paths.iter().map(|file_path| {
+            let mut path = (*folder_path).clone();
             path.push(file_path);
 
             if let Ok(file) = fs::read_to_string(&path) {
