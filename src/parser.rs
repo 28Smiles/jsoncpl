@@ -8,6 +8,12 @@ use serde_json::Value;
 pub type Span<'a> = LocatedSpan<&'a str>;
 
 #[derive(Debug, Clone)]
+pub enum JsonType<'a> {
+    Object(JsonObject<'a>),
+    String(JsonString<'a>)
+}
+
+#[derive(Debug, Clone)]
 pub struct JsonObject<'a> {
     pub values: Vec<(JsonString<'a>, JsonType<'a>)>,
     pub position: Span<'a>
@@ -17,6 +23,51 @@ pub struct JsonObject<'a> {
 pub struct JsonString<'a> {
     pub value: &'a str,
     pub position: Span<'a>
+}
+
+impl <'a>JsonType<'a> {
+    pub(crate) fn pretty(&self, buf: &mut String, indent: i32, current_indent: i32) {
+        match self {
+            JsonType::Object(value) => {
+                value.pretty(buf, indent, current_indent);
+            }
+            JsonType::String(value) => {
+                value.pretty(buf);
+            }
+        }
+    }
+}
+
+impl <'a>JsonString<'a> {
+    fn pretty(&self, buf: &mut String) {
+        buf.push('"');
+        buf.push_str(self.value);
+        buf.push('"');
+    }
+}
+
+impl <'a>JsonObject<'a> {
+    fn pretty(&self, buf: &mut String, indent: i32, current_indent: i32) {
+        buf.push('{');
+        buf.push('\n');
+        for (key, value) in &self.values {
+            for _ in 0..current_indent {
+                buf.push(' ');
+            }
+            key.pretty(buf);
+            buf.push_str(": ");
+            value.pretty(buf, indent, current_indent + indent);
+            buf.push(',');
+            buf.push('\n');
+        }
+        buf.pop().unwrap();
+        buf.pop().unwrap();
+        buf.push('\n');
+        for _ in 0..(current_indent - indent) {
+            buf.push(' ');
+        }
+        buf.push('}');
+    }
 }
 
 impl <'s>Hash for JsonString<'s> {
@@ -44,12 +95,6 @@ impl <'s>Ord for JsonString<'s> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.value.cmp(other.value)
     }
-}
-
-#[derive(Debug, Clone)]
-pub enum JsonType<'a> {
-    Object(JsonObject<'a>),
-    String(JsonString<'a>)
 }
 
 fn parse_string(s: Span) -> IResult<Span, JsonString> {

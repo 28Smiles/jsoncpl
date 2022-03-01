@@ -34,6 +34,9 @@ struct Cli {
 
     #[clap(long)]
     skip_check_parity: bool,
+
+    #[clap(long, default_value = "4")]
+    indent: i32,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
@@ -245,38 +248,32 @@ fn read_files(file_paths: &Vec<(PathBuf, Vec<PathBuf>)>) -> Vec<(&PathBuf, Vec<(
     }).collect()
 }
 
-fn check_file_style(file_paths: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>) -> bool {
+fn check_file_style(original_files: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>, parsed_files: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>, indent: i32) -> bool {
     let mut success = true;
     println!("Checking file style in folders...");
-    for (folder_path, file_paths) in file_paths {
-        println!("Checking folder '{}':", folder_path.to_str().unwrap());
-        'next_file: for (file_path, file_content) in file_paths {
-            println!("  Checking file '{}':", file_path.to_str().unwrap());
-            if let Ok(file_json) = serde_json::from_str::<Value>(&*file_content) {
-                if let Ok(pretty) = serde_json::to_string_pretty(&file_json) {
-                    let mut line = 0;
-                    let mut col = 0;
-                    for (reference, found) in pretty.chars().zip(file_content.chars()) {
-                        if reference != found {
-                            red_ln!("    Error in line {} and col {}, expected {}, found {}", line + 1, col, reference, found);
-                            success = false;
-                            continue 'next_file;
-                        }
-                        col = col + 1;
-                        if reference == '\n' {
-                            line = line + 1;
-                            col = 0;
-                        }
-                    }
-                    green_ln!("    OK!");
-                } else {
-                    red_ln!("Could not reserialize file");
+    for ((original_folder_path, file_contents), (parsed_folder_path, parsed_files)) in original_files.iter().zip(parsed_files) {
+        assert_eq!(original_folder_path.to_str().unwrap(), parsed_folder_path.to_str().unwrap());
+        println!("Checking folder '{}':", original_folder_path.to_str().unwrap());
+        'next_file: for ((original_file_path, file_content), (parsed_file_path, parsed_file)) in file_contents.iter().zip(parsed_files.iter()) {
+            assert_eq!(original_file_path.to_str().unwrap(), parsed_file_path.to_str().unwrap());
+            println!("  Checking file '{}':", original_file_path.to_str().unwrap());
+            let mut pretty = String::new();
+            parsed_file.pretty(&mut pretty, indent, indent);
+            let mut line = 0;
+            let mut col = 0;
+            for (reference, found) in pretty.chars().zip(file_content.chars()) {
+                if reference != found {
+                    red_ln!("    Error in line {} and col {}, expected {}, found {}", line + 1, col, reference, found);
                     success = false;
+                    continue 'next_file;
                 }
-            } else {
-                red_ln!("Could not parse file");
-                success = false;
+                col = col + 1;
+                if reference == '\n' {
+                    line = line + 1;
+                    col = 0;
+                }
             }
+            green_ln!("    OK!");
         }
     }
 
@@ -465,8 +462,8 @@ fn main() {
         format_files(&args, &files);
     }
     let contents = read_files(&files);
-    let file_style_success = args.skip_check_style || check_file_style(&contents);
     let jsons = parse_files(&contents);
+    let file_style_success = args.skip_check_style || check_file_style(&contents, &jsons, args.indent);
     let key_order_success = args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
     let key_parity_success = args.skip_check_parity || check_key_parity(&jsons);
 
