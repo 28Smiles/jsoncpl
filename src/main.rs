@@ -289,7 +289,7 @@ fn parse_files<'s>(file_paths: &'s Vec<(&'s PathBuf, Vec<(&'s PathBuf, String)>)
     }).collect()
 }
 
-fn check_json(parent_key: &str, reference: &JsonType, comparison: &JsonType) -> bool {
+fn check_json<'a>(parent_key: &str, reference: &'a JsonType<'a>, comparison: &JsonType, parents: &mut Vec<&'a JsonString<'a>>) -> bool {
     match reference {
         JsonType::Object(reference_values) => {
             match comparison {
@@ -298,14 +298,18 @@ fn check_json(parent_key: &str, reference: &JsonType, comparison: &JsonType) -> 
                     'references: for (reference_key, reference_value) in &reference_values.values {
                         for (key, value) in &values.values {
                             if key.value == reference_key.value {
-                                let inner_success = check_json(key.value, reference_value, value);
+                                parents.push(reference_key);
+                                let inner_success = check_json(key.value, reference_value, value, parents);
+                                parents.pop().unwrap();
                                 success = success && inner_success;
 
                                 continue 'references;
                             }
                         }
                         // Did not break -> Not found
-                        red_ln!("    Key {} not found", reference_key.value);
+                        parents.push(reference_key);
+                        red_ln!("    Key {} not found", parents.iter().map(|k| k.value).collect::<Vec<&str>>().join("."));
+                        parents.pop().unwrap();
                         success = false;
                     }
 
@@ -424,7 +428,8 @@ fn check_key_parity(folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>) -> boo
         for (file_path, json) in file_paths {
             println!("  Checking file '{}':", file_path.to_str().unwrap());
             let reference = folder_reference_content.get(*file_path).unwrap();
-            let inner_success = check_json("<root>", reference, json);
+            let mut stack = Vec::new();
+            let inner_success = check_json("<root>", reference, json, &mut stack);
 
             success = success && inner_success;
             if inner_success {
