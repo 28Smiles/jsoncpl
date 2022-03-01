@@ -258,7 +258,7 @@ fn check_file_style(file_paths: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>) -> bo
                     let mut col = 0;
                     for (reference, found) in pretty.chars().zip(file_content.chars()) {
                         if reference != found {
-                            red_ln!("    Error in line {} and col {}, expected {}, found {}", line, col, reference, found);
+                            red_ln!("    Error in line {} and col {}, expected {}, found {}", line + 1, col, reference, found);
                             success = false;
                             continue 'next_file;
                         }
