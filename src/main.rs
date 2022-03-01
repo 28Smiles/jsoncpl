@@ -25,6 +25,15 @@ struct Cli {
 
     #[clap(long)]
     format: bool,
+
+    #[clap(long)]
+    skip_check_style: bool,
+
+    #[clap(long)]
+    skip_check_order: bool,
+
+    #[clap(long)]
+    skip_check_parity: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
@@ -451,15 +460,15 @@ fn main() {
     }
 
     let files = read_folders(&args);
-    let file_parity_success = check_file_parity(&files);
+    let file_parity_success = args.skip_check_parity || check_file_parity(&files);
     if args.format {
         format_files(&args, &files);
     }
     let contents = read_files(&files);
-    let file_style_success = check_file_style(&contents);
+    let file_style_success = args.skip_check_style || check_file_style(&contents);
     let jsons = parse_files(&contents);
-    let key_order_success = check_key_order(&jsons, &args.sort, &args.order);
-    let key_parity_success = check_key_parity(&jsons);
+    let key_order_success = args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
+    let key_parity_success = args.skip_check_parity || check_key_parity(&jsons);
 
     let success = file_parity_success && file_style_success && key_order_success && key_parity_success;
 
