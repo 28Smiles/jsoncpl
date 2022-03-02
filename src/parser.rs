@@ -3,6 +3,8 @@ use std::hash::{Hash, Hasher};
 
 use nom::{bytes::complete::{tag, take}, character::complete::{multispace0, one_of}, InputTake, IResult};
 use nom_locate::{LocatedSpan, position};
+
+#[cfg(test)]
 use serde_json::Value;
 
 pub type Span<'a> = LocatedSpan<&'a str>;
@@ -191,6 +193,7 @@ pub fn parse_root(s: &String) -> Option<JsonObject> {
     parse_object(Span::new(s)).ok().map(|(_, o)| o)
 }
 
+#[cfg(test)]
 fn assert_eq(r: Value, c: JsonType) {
     match r {
         Value::String(rs) => {
@@ -216,6 +219,7 @@ fn assert_eq(r: Value, c: JsonType) {
     }
 }
 
+#[cfg(test)]
 fn test_compare(content: String) {
     let parsed = parse_root(&content).expect("Could not parse json");
     let reference: Value = serde_json::from_str(content.as_str())

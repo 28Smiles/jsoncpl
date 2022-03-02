@@ -16,28 +16,28 @@ mod parser;
 #[derive(Parser)]
 #[clap(author, version, about, long_about = "A tool for linting json files")]
 struct Cli {
-    #[clap(parse(from_os_str), about, long_about = "List the folders to search for files to lint and compare")]
+    #[clap(parse(from_os_str), help = "List the folders to search for files to lint and compare")]
     folders: Vec<PathBuf>,
 
-    #[clap(short, long, arg_enum, default_value = "default", about, long_about = "The expected sorting algorithm for keys in the json file")]
+    #[clap(short, long, arg_enum, default_value = "default", help = "The expected sorting algorithm for keys in the json file")]
     sort: SortingMode,
 
-    #[clap(short, long, arg_enum, default_value = "asc", about, long_about = "The expected sort order for keys in the json file")]
+    #[clap(short, long, arg_enum, default_value = "asc", help = "The expected sort order for keys in the json file")]
     order: Order,
 
-    #[clap(long, about, long_about = "Whether the files should be automatically formatted")]
+    #[clap(long, help = "Whether the files should be automatically formatted")]
     format: bool,
 
-    #[clap(long, about, long_about = "Whether the style check should be skipped")]
+    #[clap(long, help = "Whether the style check should be skipped")]
     skip_check_style: bool,
 
-    #[clap(long, about, long_about = "Whether the key order check should be skipped")]
+    #[clap(long, help = "Whether the key order check should be skipped")]
     skip_check_order: bool,
 
-    #[clap(long, about, long_about = "Whether the key parity check should be skipped")]
+    #[clap(long, help = "Whether the key parity check should be skipped")]
     skip_check_parity: bool,
 
-    #[clap(long, default_value = "4", about, long_about = "The expected indentation of the json files")]
+    #[clap(long, default_value = "4", help = "The expected indentation of the json files")]
     indent: i32,
 }
 
