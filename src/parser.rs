@@ -15,50 +15,71 @@ pub enum JsonType<'a> {
     String(JsonString<'a>)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct JsonObject<'a> {
     pub values: Vec<(JsonString<'a>, JsonType<'a>)>,
     pub position: Span<'a>
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct JsonString<'a> {
     pub value: &'a str,
     pub position: Span<'a>
 }
 
-impl <'a>JsonType<'a> {
-    pub(crate) fn pretty(&self, buf: &mut String, indent: i32, current_indent: i32) {
+impl <'a>Clone for JsonObject<'a> {
+    fn clone(&self) -> Self {
+        JsonObject {
+            values: self.values.iter().map(|(key, value)| {
+                (*key, value.clone())
+            }).collect(),
+            position: self.position
+        }
+    }
+}
+
+pub trait Pretty {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32);
+    fn pretty(&self, indent: i32, current_indent: i32) -> String {
+        let mut buf = String::new();
+        self.pretty_impl(&mut buf, indent, current_indent);
+
+        return buf;
+    }
+}
+
+impl <'a>Pretty for JsonType<'a> {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32) {
         match self {
             JsonType::Object(value) => {
-                value.pretty(buf, indent, current_indent);
+                value.pretty_impl(buf, indent, current_indent);
             }
             JsonType::String(value) => {
-                value.pretty(buf);
+                value.pretty_impl(buf, indent, current_indent);
             }
         }
     }
 }
 
-impl <'a>JsonString<'a> {
-    fn pretty(&self, buf: &mut String) {
+impl <'a>Pretty for JsonString<'a> {
+    fn pretty_impl(&self, buf: &mut String, _: i32, _: i32) {
         buf.push('"');
         buf.push_str(self.value);
         buf.push('"');
     }
 }
 
-impl <'a>JsonObject<'a> {
-    fn pretty(&self, buf: &mut String, indent: i32, current_indent: i32) {
+impl <'a>Pretty for JsonObject<'a> {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32) {
         buf.push('{');
         buf.push('\n');
         for (key, value) in &self.values {
             for _ in 0..current_indent {
                 buf.push(' ');
             }
-            key.pretty(buf);
+            key.pretty_impl(buf, indent, current_indent);
             buf.push_str(": ");
-            value.pretty(buf, indent, current_indent + indent);
+            value.pretty_impl(buf, indent, current_indent + indent);
             buf.push(',');
             buf.push('\n');
         }
@@ -278,8 +299,7 @@ fn pretty_file_test1() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let mut parsed_pretty = String::new();
-    parsed.pretty(&mut parsed_pretty, 2, 2);
+    let parsed_pretty = parsed.pretty(2, 2);
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -289,8 +309,7 @@ fn pretty_file_test2() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let mut parsed_pretty = String::new();
-    parsed.pretty(&mut parsed_pretty, 2, 2);
+    let parsed_pretty = parsed.pretty(2, 2);
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -300,8 +319,7 @@ fn pretty_file_test3() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let mut parsed_pretty = String::new();
-    parsed.pretty(&mut parsed_pretty, 2, 2);
+    let parsed_pretty = parsed.pretty(2, 2);
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -311,7 +329,6 @@ fn pretty_file_test4() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let mut parsed_pretty = String::new();
-    parsed.pretty(&mut parsed_pretty, 2, 2);
+    let parsed_pretty = parsed.pretty(2, 2);
     assert_eq!(&*parsed_pretty, content);
 }

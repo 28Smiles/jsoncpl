@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use clap::{ArgEnum, Parser, IntoApp, ErrorKind};
 
-use crate::parser::{JsonObject, JsonString, JsonType};
+use crate::parser::{JsonObject, JsonString, JsonType, Pretty};
 use std::process::exit;
 
 mod parser;
@@ -122,10 +122,7 @@ fn format<'a>(json: &JsonType<'a>, sorting_mode: &SortingMode, order: &Order) ->
         JsonType::Object(dict) => {
             let mut values: Vec<(JsonString, JsonType)> = dict.values.iter()
                 .map(|(key, value)| {
-                    (JsonString {
-                        value: key.value,
-                        position: key.position
-                    }, format(value, sorting_mode, order))
+                    (*key, format(value, sorting_mode, order))
                 }).collect();
 
             match sorting_mode {
@@ -144,10 +141,7 @@ fn format<'a>(json: &JsonType<'a>, sorting_mode: &SortingMode, order: &Order) ->
             })
         }
         JsonType::String(string) => {
-            JsonType::String(JsonString {
-                value: string.value,
-                position: string.position
-            })
+            JsonType::String(*string)
         }
     }
 }
@@ -160,7 +154,7 @@ fn lint(json: &JsonType, sorting_mode: &SortingMode, order: &Order) -> bool {
             SortingMode::Natural =>
                 ordered_dict.sort_by(|a, b| human_sort::compare(a.value, b.value)),
             SortingMode::Default =>
-                ordered_dict.sort_by(|a, b| a.value.cmp(b.value)),
+                ordered_dict.sort_by(|a, b| a.cmp(b)),
         }
         if let Order::Desc = order  {
             ordered_dict.reverse();
@@ -201,8 +195,7 @@ fn format_files(args: &Cli, folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>
             let mut path = (*folder_path).clone();
             path.push(file_path);
 
-            let mut pretty = String::new();
-            format(json, &args.sort, &args.order).pretty(&mut pretty, args.indent, args.indent);
+            let pretty = format(json, &args.sort, &args.order).pretty(args.indent, args.indent);
             let write_success = fs::write(&path, &*pretty).is_ok();
             success = success && write_success;
         }
@@ -255,8 +248,7 @@ fn check_file_style(original_files: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>, p
         'next_file: for ((original_file_path, file_content), (parsed_file_path, parsed_file)) in file_contents.iter().zip(parsed_files.iter()) {
             assert_eq!(original_file_path.to_str().unwrap(), parsed_file_path.to_str().unwrap());
             println!("  Checking file '{}':", original_file_path.to_str().unwrap());
-            let mut pretty = String::new();
-            parsed_file.pretty(&mut pretty, indent, indent);
+            let pretty = parsed_file.pretty(indent, indent);
             let mut line = 0;
             let mut col = 0;
             for (reference, found) in pretty.chars().zip(file_content.chars()) {
@@ -301,7 +293,7 @@ fn check_json<'a>(parent_key: &str, reference: &'a JsonType<'a>, comparison: &Js
                     let mut success = true;
                     'references: for (reference_key, reference_value) in &reference_values.values {
                         for (key, value) in &values.values {
-                            if key.value == reference_key.value {
+                            if key == reference_key {
                                 parents.push(reference_key);
                                 let inner_success = check_json(key.value, reference_value, value, parents);
                                 parents.pop().unwrap();
@@ -353,9 +345,9 @@ fn combine_json<'a>(a: &JsonType<'a>, b: &JsonType<'a>, file: &PathBuf) -> JsonT
                     let mut combined = Vec::new();
                     'keys: for key in combined_keys {
                         for (a_key, a_value) in &a_object.values {
-                            if key.value == a_key.value {
+                            if key == a_key {
                                 for (b_key, b_value) in &b_object.values {
-                                    if key.value == b_key.value {
+                                    if key == b_key {
                                         combined.push((key.clone(), combine_json(a_value, b_value, file)));
                                         continue 'keys;
                                     }
@@ -367,7 +359,7 @@ fn combine_json<'a>(a: &JsonType<'a>, b: &JsonType<'a>, file: &PathBuf) -> JsonT
                             }
                         }
                         for (b_key, b_value) in &b_object.values {
-                            if key.value == b_key.value {
+                            if key == b_key {
                                 // B
                                 combined.push((key.clone(), b_value.clone()));
                                 continue 'keys;
@@ -377,7 +369,7 @@ fn combine_json<'a>(a: &JsonType<'a>, b: &JsonType<'a>, file: &PathBuf) -> JsonT
 
                     JsonType::Object(JsonObject {
                         values: combined,
-                        position: a_object.position.clone()
+                        position: a_object.position
                     })
                 }
                 JsonType::String(b_string) => {
@@ -403,7 +395,7 @@ fn combine_json<'a>(a: &JsonType<'a>, b: &JsonType<'a>, file: &PathBuf) -> JsonT
                     JsonType::Object(b_object.clone())
                 }
                 JsonType::String(_) => {
-                    JsonType::String(a_string.clone())
+                    JsonType::String(*a_string)
                 }
             }
         }
