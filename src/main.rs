@@ -453,8 +453,8 @@ fn main() {
     if args.format {
         format_files(&args, &jsons);
     }
-    let file_style_success = args.skip_check_style || check_file_style(&contents, &jsons, args.indent);
-    let key_order_success = args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
+    let file_style_success = args.format || args.skip_check_style || check_file_style(&contents, &jsons, args.indent);
+    let key_order_success = args.format || args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
     let key_parity_success = args.skip_check_parity || check_key_parity(&jsons);
 
     let success = file_parity_success && file_style_success && key_order_success && key_parity_success;
