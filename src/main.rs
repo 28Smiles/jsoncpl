@@ -439,7 +439,7 @@ fn check_key_parity(folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>) -> boo
 fn main() {
     let args: Cli = Cli::parse();
     if args.folders.len() == 0 {
-        let mut app = Cli::into_app();
+        let mut app = Cli::command();
         app.error(
             ErrorKind::ArgumentConflict,
             "You need to specify at least one folder",
