@@ -222,7 +222,7 @@ fn check_key_order(folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>, sorting
             let lint_success = lint(&json, sorting_mode, order);
             success = success && lint_success;
             if lint_success {
-                green_ln!("    Success");
+                green_ln!("    Ok!");
             }
         }
     }
