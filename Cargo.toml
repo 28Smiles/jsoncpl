@@ -10,7 +10,7 @@ nom_locate = "4.0"
 human-sort = "0.2"
 similar = "2.1"
 colour = "0.6"
-clap = { version = "3.0", features = ["derive"] }
+clap = { version = "3.1", features = ["derive"] }
 pathdiff = "0.2"
 unescape = "0.1"
 
