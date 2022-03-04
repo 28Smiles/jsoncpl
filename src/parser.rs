@@ -62,18 +62,15 @@ impl <'a>JsonObject<'a> {
             buf.push(',');
             buf.push('\n');
         }
+        buf.pop().unwrap();
         if self.values.len() > 0 {
-            buf.pop().unwrap();
-            buf.pop().unwrap();
+            buf.pop().unwrap(); // Remove trailing comma
             buf.push('\n');
             for _ in 0..(current_indent - indent) {
                 buf.push(' ');
             }
-            buf.push('}');
-        } else {
-            buf.pop().unwrap();
-            buf.push('}');
         }
+        buf.push('}');
     }
 }
 
