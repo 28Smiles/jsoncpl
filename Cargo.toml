@@ -7,8 +7,6 @@ authors = [ "Leon Camus" ]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-indexmap = "1.8"
-serde_json = { version = "1.0", features = ["preserve_order"] }
 nom = "7.1"
 nom_locate = "4.0"
 human-sort = "0.2"
@@ -17,6 +15,10 @@ colour = "0.6"
 clap = { version = "3.0", features = ["derive"] }
 pathdiff = "0.2"
 unescape = "0.1"
+
+[dev-dependencies]
+indexmap = "1.8"
+serde_json = { version = "1.0", features = ["preserve_order"] }
 
 [profile.release]
 lto = true

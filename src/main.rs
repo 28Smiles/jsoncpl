@@ -6,7 +6,6 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap::{ArgEnum, Parser, IntoApp, ErrorKind};
-use serde_json::{Map, Value};
 
 use crate::parser::{JsonObject, JsonString, JsonType};
 use std::process::exit;
@@ -118,26 +117,38 @@ fn check_file_parity(files: &Vec<(&PathBuf, Vec<PathBuf>)>) -> bool {
     success
 }
 
-fn format(json: Value, sorting_mode: &SortingMode, order: &Order) -> Value {
-    if let Value::Object(dict) = json {
-        let mut dict: Vec<(String, Value)> = dict.into_iter().collect();
-        match sorting_mode {
-            SortingMode::Natural =>
-                dict.sort_by(|(ka, _), (kb, _)| human_sort::compare(ka, kb)),
-            SortingMode::Default =>
-                dict.sort_by(|(ka, _), (kb, _)| ka.cmp(kb)),
-        }
-        if let Order::Desc = order  {
-            dict.reverse();
-        }
-        let mut map = Map::with_capacity(dict.len());
-        for (k, v) in dict {
-            map.insert(k, format(v, sorting_mode, order));
-        }
+fn format<'a>(json: &JsonType<'a>, sorting_mode: &SortingMode, order: &Order) -> JsonType<'a> {
+    match json {
+        JsonType::Object(dict) => {
+            let mut values: Vec<(JsonString, JsonType)> = dict.values.iter()
+                .map(|(key, value)| {
+                    (JsonString {
+                        value: key.value,
+                        position: key.position
+                    }, format(value, sorting_mode, order))
+                }).collect();
 
-        Value::Object(map)
-    } else {
-        json
+            match sorting_mode {
+                SortingMode::Natural =>
+                    values.sort_by(|(ka, _), (kb, _)| human_sort::compare(ka.value, kb.value)),
+                SortingMode::Default =>
+                    values.sort_by(|(ka, _), (kb, _)| ka.value.cmp(kb.value)),
+            }
+            if let Order::Desc = order  {
+                values.reverse();
+            }
+
+            JsonType::Object(JsonObject {
+                values: values,
+                position: dict.position
+            })
+        }
+        JsonType::String(string) => {
+            JsonType::String(JsonString {
+                value: string.value,
+                position: string.position
+            })
+        }
     }
 }
 
@@ -180,34 +191,20 @@ fn lint(json: &JsonType, sorting_mode: &SortingMode, order: &Order) -> bool {
     }
 }
 
-fn format_files(args: &Cli, folders: &Vec<(&PathBuf, Vec<PathBuf>)>) -> bool {
+fn format_files(args: &Cli, folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>) -> bool {
     println!("Format files in folders...");
     let mut success = true;
     for (folder_path, file_paths) in folders {
         println!("Checking folder '{}':", folder_path.to_str().unwrap());
-        for file_path in file_paths {
+        for (file_path, json) in file_paths {
             println!("  Checking file '{}':", file_path.to_str().unwrap());
             let mut path = (*folder_path).clone();
             path.push(file_path);
 
-            if let Ok(file_content) = fs::read_to_string(&path) {
-                if let Ok(file_json) = serde_json::from_str(&*file_content) {
-                    let value = format(file_json, &args.sort, &args.order);
-                    if let Ok(pretty) = serde_json::to_string_pretty(&value) {
-                        let write_success = fs::write(&path, &*pretty).is_ok();
-                        success = success && write_success;
-                    } else {
-                        red_ln!("Could not reserialize file: {}", &path.to_str().unwrap());
-                        success = false;
-                    }
-                } else {
-                    red_ln!("Could not parse file: {}", &path.to_str().unwrap());
-                    success = false;
-                }
-            } else {
-                red_ln!("Could not read file: {}", &path.to_str().unwrap());
-                success = false;
-            }
+            let mut pretty = String::new();
+            format(json, &args.sort, &args.order).pretty(&mut pretty, args.indent, args.indent);
+            let write_success = fs::write(&path, &*pretty).is_ok();
+            success = success && write_success;
         }
     }
 
@@ -459,11 +456,11 @@ fn main() {
 
     let files = read_folders(&args);
     let file_parity_success = args.skip_check_parity || check_file_parity(&files);
-    if args.format {
-        format_files(&args, &files);
-    }
     let contents = read_files(&files);
     let jsons = parse_files(&contents);
+    if args.format {
+        format_files(&args, &jsons);
+    }
     let file_style_success = args.skip_check_style || check_file_style(&contents, &jsons, args.indent);
     let key_order_success = args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
     let key_parity_success = args.skip_check_parity || check_key_parity(&jsons);

@@ -62,13 +62,18 @@ impl <'a>JsonObject<'a> {
             buf.push(',');
             buf.push('\n');
         }
-        buf.pop().unwrap();
-        buf.pop().unwrap();
-        buf.push('\n');
-        for _ in 0..(current_indent - indent) {
-            buf.push(' ');
+        if self.values.len() > 0 {
+            buf.pop().unwrap();
+            buf.pop().unwrap();
+            buf.push('\n');
+            for _ in 0..(current_indent - indent) {
+                buf.push(' ');
+            }
+            buf.push('}');
+        } else {
+            buf.pop().unwrap();
+            buf.push('}');
         }
-        buf.push('}');
     }
 }
 
@@ -268,4 +273,48 @@ fn parse_file_test4() {
     let content = include_str!("../testdata/json/test4.json");
     let content = String::from(content);
     test_compare(content);
+}
+
+#[test]
+fn pretty_file_test1() {
+    let content = include_str!("../testdata/json/test1.json");
+    let content = String::from(content);
+
+    let parsed = parse_root(&content).expect("Could not parse json");
+    let mut parsed_pretty = String::new();
+    parsed.pretty(&mut parsed_pretty, 2, 2);
+    assert_eq!(&*parsed_pretty, content);
+}
+
+#[test]
+fn pretty_file_test2() {
+    let content = include_str!("../testdata/json/test2.json");
+    let content = String::from(content);
+
+    let parsed = parse_root(&content).expect("Could not parse json");
+    let mut parsed_pretty = String::new();
+    parsed.pretty(&mut parsed_pretty, 2, 2);
+    assert_eq!(&*parsed_pretty, content);
+}
+
+#[test]
+fn pretty_file_test3() {
+    let content = include_str!("../testdata/json/test3.json");
+    let content = String::from(content);
+
+    let parsed = parse_root(&content).expect("Could not parse json");
+    let mut parsed_pretty = String::new();
+    parsed.pretty(&mut parsed_pretty, 2, 2);
+    assert_eq!(&*parsed_pretty, content);
+}
+
+#[test]
+fn pretty_file_test4() {
+    let content = include_str!("../testdata/json/test4.json");
+    let content = String::from(content);
+
+    let parsed = parse_root(&content).expect("Could not parse json");
+    let mut parsed_pretty = String::new();
+    parsed.pretty(&mut parsed_pretty, 2, 2);
+    assert_eq!(&*parsed_pretty, content);
 }
