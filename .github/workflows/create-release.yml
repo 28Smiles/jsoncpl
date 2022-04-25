@@ -29,20 +29,20 @@ jobs:
     - name: Create Linux artifacts
       run: |
         mkdir staging
-        upx -9 -o staging/cqlsh target/x86_64-unknown-linux-gnu/release/cqlsh
+        upx -9 -o staging/jsoncpl target/x86_64-unknown-linux-gnu/release/jsoncpl
         cd staging
-        zip cqlsh-linux.zip cqlsh
-        tar -cvzf cqlsh-linux.tar.gz cqlsh
-        rm cqlsh
+        zip jsoncpl-linux.zip jsoncpl
+        tar -cvzf jsoncpl-linux.tar.gz jsoncpl
+        rm jsoncpl
     - name: Build Windows
       run: cargo build --target x86_64-pc-windows-gnu --verbose --release
     - name: Create Windows artifacts
       run: |
-        upx -9 -o staging/cqlsh.exe target/x86_64-pc-windows-gnu/release/cqlsh.exe
+        upx -9 -o staging/jsoncpl.exe target/x86_64-pc-windows-gnu/release/jsoncpl.exe
         cd staging
-        zip cqlsh-windows.zip cqlsh.exe
-        tar -cvzf cqlsh-windows.tar.gz cqlsh.exe
-        rm cqlsh.exe
+        zip jsoncpl-windows.zip jsoncpl.exe
+        tar -cvzf jsoncpl-windows.tar.gz jsoncpl.exe
+        rm jsoncpl.exe
     - name: Build-musl macOS x86
       uses: Shogan/rust-musl-action@v1.0.2
       with:
@@ -50,11 +50,11 @@ jobs:
           cargo build --target x86_64-apple-darwin --verbose --release
     - name: Create MacOS artifacts
       run: |
-        upx -9 -o staging/cqlsh target/x86_64-apple-darwin/release/cqlsh
+        upx -9 -o staging/jsoncpl target/x86_64-apple-darwin/release/jsoncpl
         cd staging
-        zip cqlsh-macos.zip cqlsh
-        tar -cvzf cqlsh-macos.tar.gz cqlsh
-        rm cqlsh
+        zip jsoncpl-macos.zip jsoncpl
+        tar -cvzf jsoncpl-macos.tar.gz jsoncpl
+        rm jsoncpl
     - name: Commit to the repo
       run: |
         git config --global user.name "28Smiles"
