@@ -1,0 +1,80 @@
+name: create-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The Version'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set Version in Cargo
+      run: |
+        sed -i ':a;N;$!ba;s/name = "jsoncpl"\nversion = "[^"]*"/name = "jsoncpl"\nversion = "${{ github.event.inputs.version }}"/g' Cargo.toml
+        sed -i ':a;N;$!ba;s/name = "jsoncpl"\nversion = "[^"]*"/name = "jsoncpl"\nversion = "${{ github.event.inputs.version }}"/g' Cargo.lock
+    - name: Install targets
+      run: |
+        sudo apt-get install -y mingw-w64
+        rustup target add x86_64-pc-windows-gnu
+        rustup target add x86_64-unknown-linux-gnu
+    - uses: Swatinem/rust-cache@v1
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Build Linux
+      run: cargo build --target x86_64-unknown-linux-gnu --verbose --release
+    - name: Create Linux artifacts
+      run: |
+        mkdir staging
+        upx -9 -o staging/cqlsh target/x86_64-unknown-linux-gnu/release/cqlsh
+        cd staging
+        zip cqlsh-linux.zip cqlsh
+        tar -cvzf cqlsh-linux.tar.gz cqlsh
+        rm cqlsh
+    - name: Build Windows
+      run: cargo build --target x86_64-pc-windows-gnu --verbose --release
+    - name: Create Windows artifacts
+      run: |
+        upx -9 -o staging/cqlsh.exe target/x86_64-pc-windows-gnu/release/cqlsh.exe
+        cd staging
+        zip cqlsh-windows.zip cqlsh.exe
+        tar -cvzf cqlsh-windows.tar.gz cqlsh.exe
+        rm cqlsh.exe
+    - name: Build-musl macOS x86
+      uses: Shogan/rust-musl-action@v1.0.2
+      with:
+        args:
+          cargo build --target x86_64-apple-darwin --verbose --release
+    - name: Create MacOS artifacts
+      run: |
+        upx -9 -o staging/cqlsh target/x86_64-apple-darwin/release/cqlsh
+        cd staging
+        zip cqlsh-macos.zip cqlsh
+        tar -cvzf cqlsh-macos.tar.gz cqlsh
+        rm cqlsh
+    - name: Commit to the repo
+      run: |
+        git config --global user.name "28Smiles"
+        git config --global user.email "leon@camus.fun"
+        git add Cargo.toml Cargo.lock
+        git commit -m "chore: Bump Version"
+        git push
+        git tag "v${{ github.event.inputs.version }}"
+        git push --tags
+    - uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "v${{ github.event.inputs.version }}"
+        prerelease: false
+        title: "v${{ github.event.inputs.version }}"
+        files: |
+          staging/*
+          LICENSE
+          README.md
+    - uses: actions/upload-artifact@v2
+      with:
+        name: package
+        path: staging
