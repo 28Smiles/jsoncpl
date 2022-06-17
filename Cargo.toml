@@ -15,7 +15,7 @@ pathdiff = "0.2"
 unescape = "0.1"
 
 [dev-dependencies]
-indexmap = "1.8"
+indexmap = "1.9"
 serde_json = { version = "1.0", features = ["preserve_order"] }
 
 [profile.release]
