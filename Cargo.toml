@@ -8,7 +8,7 @@ authors = [ "Leon Camus" ]
 nom = "7.1"
 nom_locate = "4.0"
 human-sort = "0.2"
-similar = "2.1"
+similar = "2.2"
 colour = "0.6"
 clap = { version = "3.2", features = ["derive"] }
 pathdiff = "0.2"
