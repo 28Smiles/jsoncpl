@@ -39,30 +39,30 @@ impl <'a>Clone for JsonObject<'a> {
 }
 
 pub trait Pretty {
-    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32);
-    fn pretty(&self, indent: i32, current_indent: i32) -> String {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32, line_ending: &'static str);
+    fn pretty(&self, indent: i32, current_indent: i32, line_ending: &'static str) -> String {
         let mut buf = String::new();
-        self.pretty_impl(&mut buf, indent, current_indent);
+        self.pretty_impl(&mut buf, indent, current_indent, line_ending);
 
         return buf;
     }
 }
 
 impl <'a>Pretty for JsonType<'a> {
-    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32) {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32, line_ending: &'static str) {
         match self {
             JsonType::Object(value) => {
-                value.pretty_impl(buf, indent, current_indent);
+                value.pretty_impl(buf, indent, current_indent, line_ending);
             }
             JsonType::String(value) => {
-                value.pretty_impl(buf, indent, current_indent);
+                value.pretty_impl(buf, indent, current_indent, line_ending);
             }
         }
     }
 }
 
 impl <'a>Pretty for JsonString<'a> {
-    fn pretty_impl(&self, buf: &mut String, _: i32, _: i32) {
+    fn pretty_impl(&self, buf: &mut String, _: i32, _: i32, _: &'static str) {
         buf.push('"');
         buf.push_str(self.value);
         buf.push('"');
@@ -70,23 +70,25 @@ impl <'a>Pretty for JsonString<'a> {
 }
 
 impl <'a>Pretty for JsonObject<'a> {
-    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32) {
+    fn pretty_impl(&self, buf: &mut String, indent: i32, current_indent: i32, line_ending: &'static str) {
         buf.push('{');
-        buf.push('\n');
+        buf.push_str(line_ending);
         for (key, value) in &self.values {
             for _ in 0..current_indent {
                 buf.push(' ');
             }
-            key.pretty_impl(buf, indent, current_indent);
+            key.pretty_impl(buf, indent, current_indent, line_ending);
             buf.push_str(": ");
-            value.pretty_impl(buf, indent, current_indent + indent);
+            value.pretty_impl(buf, indent, current_indent + indent, line_ending);
             buf.push(',');
-            buf.push('\n');
+            buf.push_str(line_ending);
         }
         buf.pop().unwrap();
         if self.values.len() > 0 {
-            buf.pop().unwrap(); // Remove trailing comma
-            buf.push('\n');
+            for _ in 0..line_ending.len() {
+                buf.pop().unwrap(); // Remove trailing comma
+            }
+            buf.push_str(line_ending);
             for _ in 0..(current_indent - indent) {
                 buf.push(' ');
             }
@@ -299,7 +301,7 @@ fn pretty_file_test1() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let parsed_pretty = parsed.pretty(2, 2);
+    let parsed_pretty = parsed.pretty(2, 2, "\n");
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -309,7 +311,7 @@ fn pretty_file_test2() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let parsed_pretty = parsed.pretty(2, 2);
+    let parsed_pretty = parsed.pretty(2, 2, "\n");
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -319,7 +321,7 @@ fn pretty_file_test3() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let parsed_pretty = parsed.pretty(2, 2);
+    let parsed_pretty = parsed.pretty(2, 2, "\n");
     assert_eq!(&*parsed_pretty, content);
 }
 
@@ -329,6 +331,6 @@ fn pretty_file_test4() {
     let content = String::from(content);
 
     let parsed = parse_root(&content).expect("Could not parse json");
-    let parsed_pretty = parsed.pretty(2, 2);
+    let parsed_pretty = parsed.pretty(2, 2, "\n");
     assert_eq!(&*parsed_pretty, content);
 }

@@ -11,6 +11,7 @@ use crate::parser::{JsonObject, JsonString, JsonType, Pretty};
 use std::process::exit;
 
 mod parser;
+mod natural_sort;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = "A tool for linting json files")]
@@ -24,6 +25,9 @@ struct Cli {
     #[clap(short, long, arg_enum, default_value = "asc", help = "The expected sort order for keys in the json file")]
     order: Order,
 
+    #[clap(short, long, arg_enum, default_value = "lf", help = "The expected line endings of the json file")]
+    line_endings: LineEndings,
+
     #[clap(long, help = "Whether the files should be automatically formatted")]
     format: bool,
 
@@ -35,6 +39,9 @@ struct Cli {
 
     #[clap(long, help = "Whether the key parity check should be skipped")]
     skip_check_parity: bool,
+
+    #[clap(long, help = "Whether there should be a new line at the end of the file")]
+    new_line: bool,
 
     #[clap(long, default_value = "4", help = "The expected indentation of the json files")]
     indent: i32,
@@ -50,6 +57,12 @@ enum SortingMode {
 enum Order {
     Asc,
     Desc
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+enum LineEndings {
+    CRLF,
+    LF
 }
 
 fn file_tree(base_path: &PathBuf, path: &PathBuf, mut files: Vec<PathBuf>) -> Vec<PathBuf> {
@@ -127,7 +140,7 @@ fn format<'a>(json: &JsonType<'a>, sorting_mode: &SortingMode, order: &Order) ->
 
             match sorting_mode {
                 SortingMode::Natural =>
-                    values.sort_by(|(ka, _), (kb, _)| human_sort::compare(ka.value, kb.value)),
+                    values.sort_by(|(ka, _), (kb, _)| natural_sort::compare(ka.value, kb.value)),
                 SortingMode::Default =>
                     values.sort_by(|(ka, _), (kb, _)| ka.value.cmp(kb.value)),
             }
@@ -152,7 +165,7 @@ fn lint(json: &JsonType, sorting_mode: &SortingMode, order: &Order) -> bool {
         let mut ordered_dict: Vec<&JsonString> = ordered_dict.into_iter().map(|(key, _)| key).collect();
         match sorting_mode {
             SortingMode::Natural =>
-                ordered_dict.sort_by(|a, b| human_sort::compare(a.value, b.value)),
+                ordered_dict.sort_by(|a, b| natural_sort::compare(a.value, b.value)),
             SortingMode::Default =>
                 ordered_dict.sort_by(|a, b| a.cmp(b)),
         }
@@ -195,7 +208,18 @@ fn format_files(args: &Cli, folders: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>
             let mut path = (*folder_path).clone();
             path.push(file_path);
 
-            let pretty = format(json, &args.sort, &args.order).pretty(args.indent, args.indent);
+            let line_ending = match args.line_endings {
+                LineEndings::CRLF => "\r\n",
+                LineEndings::LF => "\n",
+            };
+            let mut pretty = format(json, &args.sort, &args.order).pretty(
+                args.indent,
+                args.indent,
+                line_ending
+            );
+            if args.new_line {
+                pretty.push_str(line_ending);
+            }
             let write_success = fs::write(&path, &*pretty).is_ok();
             success = success && write_success;
         }
@@ -239,7 +263,7 @@ fn read_files<'a, 'b>(file_paths: &'b Vec<(&'a PathBuf, Vec<PathBuf>)>) -> Vec<(
     }).collect()
 }
 
-fn check_file_style(original_files: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>, parsed_files: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>, indent: i32) -> bool {
+fn check_file_style(original_files: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>, parsed_files: &Vec<(&PathBuf, Vec<(&PathBuf, JsonType)>)>, indent: i32, line_endings: LineEndings, new_line: bool) -> bool {
     let mut success = true;
     println!("Checking file style in folders...");
     for ((original_folder_path, file_contents), (parsed_folder_path, parsed_files)) in original_files.iter().zip(parsed_files) {
@@ -248,11 +272,22 @@ fn check_file_style(original_files: &Vec<(&PathBuf, Vec<(&PathBuf, String)>)>, p
         'next_file: for ((original_file_path, file_content), (parsed_file_path, parsed_file)) in file_contents.iter().zip(parsed_files.iter()) {
             assert_eq!(original_file_path.to_str().unwrap(), parsed_file_path.to_str().unwrap());
             println!("  Checking file '{}':", original_file_path.to_str().unwrap());
-            let pretty = parsed_file.pretty(indent, indent);
+            let line_ending = match line_endings {
+                LineEndings::CRLF => "\r\n",
+                LineEndings::LF => "\n",
+            };
+            let mut pretty = parsed_file.pretty(indent, indent, line_ending);
+            if new_line {
+                pretty.push_str(line_ending);
+            }
             let mut line = 0;
             let mut col = 0;
             for (reference, found) in pretty.chars().zip(file_content.chars()) {
                 if reference != found {
+                    let r = format!("{}", reference);
+                    let f = format!("{}", found);
+                    let reference = snailquote::escape(&*r);
+                    let found = snailquote::escape(&*f);
                     red_ln!("    Error in line {} and col {}, expected {}, found {}", line + 1, col, reference, found);
                     success = false;
                     continue 'next_file;
@@ -453,7 +488,7 @@ fn main() {
     if args.format {
         format_files(&args, &jsons);
     }
-    let file_style_success = args.format || args.skip_check_style || check_file_style(&contents, &jsons, args.indent);
+    let file_style_success = args.format || args.skip_check_style || check_file_style(&contents, &jsons, args.indent, args.line_endings, args.new_line);
     let key_order_success = args.format || args.skip_check_order || check_key_order(&jsons, &args.sort, &args.order);
     let key_parity_success = args.skip_check_parity || check_key_parity(&jsons);
 
