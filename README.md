@@ -5,7 +5,8 @@
 
 # Jsoncpl
 
-Jsoncpl is a json comparison and linting tool. It was designed to lint dictionary-like json files, 
+Jsoncpl is a json comparison and linting tool. It was designed to lint dictionary-like json files like the language files
+from [angular-l10n](https://github.com/robisim74/angular-l10n), 
 therefore currently its parser only supports json-objects and strings. Jsoncpl compares the file hierarchy,
 the key order and compares the keys of every file with all its counterparts (same relative folder and filename).
 
