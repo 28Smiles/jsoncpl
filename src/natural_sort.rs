@@ -9,18 +9,18 @@ pub fn compare_chars_iters<'a>(c1: Chars<'a>, c2: Chars<'a>) -> Result<Ordering,
     let mut c2 = c2.peekable();
 
     while let (Some(x), Some(y)) = (c1.peek(), c2.peek()) {
-        if x == y {
-            c1.next();
-            c2.next();
-        } else if x.is_numeric() && y.is_numeric() {
+        if x.is_numeric() && y.is_numeric() {
             match take_numeric(&mut c1).cmp(&take_numeric(&mut c2)) {
                 Ordering::Equal => (c1.next(), c2.next()),
                 ref a => return Ok(*a),
             };
         } else if x.is_numeric() && !y.is_numeric() {
-            return Ok(Ordering::Greater)
-        } else if !x.is_numeric() && y.is_numeric() {
             return Ok(Ordering::Less)
+        } else if !x.is_numeric() && y.is_numeric() {
+            return Ok(Ordering::Greater)
+        } else if x == y {
+            c1.next();
+            c2.next();
         } else {
             return Ok(x.cmp(y));
         }
@@ -52,6 +52,7 @@ mod test {
 
     #[test]
     fn test_compare() {
+        assert_eq!(compare("__a__", "__1__"), Ordering::Greater);
         assert_eq!(compare("__1__", "__18__"), Ordering::Less);
         assert_eq!(compare("__1__", "__12__"), Ordering::Less);
         assert_eq!(compare("__1__", "__2__"), Ordering::Less);
