@@ -9,7 +9,7 @@ nom = "7.1"
 nom_locate = "4.0"
 similar = "2.2"
 colour = "0.6"
-clap = { version = "3.2", features = ["derive"] }
+clap = { version = "4.0", features = ["derive"] }
 pathdiff = "0.2"
 unescape = "0.1"
 snailquote = "0.3"
