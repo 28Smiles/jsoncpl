@@ -1,18 +1,20 @@
 [package]
 name = "jsoncpl"
-version = "0.3.0"
+version = "1.0.0"
 edition = "2021"
 authors = [ "Leon Camus" ]
 
 [dependencies]
-nom = "7.1"
-nom_locate = "4.0"
-similar = "2.2"
-colour = "0.6"
-clap = { version = "3.2", features = ["derive"] }
-pathdiff = "0.2"
-unescape = "0.1"
-snailquote = "0.3"
+nom = "7"
+nom_locate = "4"
+similar = "2"
+colour = "0"
+colored = "2"
+clap = { version = "4", features = ["derive"] }
+pathdiff = "0"
+unescape = "0"
+snailquote = "0"
+num-bigint = "0"
 
 [dev-dependencies]
 indexmap = "1.9"
