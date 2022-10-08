@@ -28,54 +28,72 @@ i18n:
 ```
 then you would need to provide the paths to the folders `de`, `en` and `fr` via the cli:
 ```
-jsoncpl i18n/de i18n/en i18n/fr
+jsoncpl lint i18n/de i18n/en i18n/fr
 ```
 
 Jsoncpl is highly configurable and provides autoformatting, for further explanation of the cli-parameters,
 type `jsoncpl --help`:
 ```
-USAGE:
-    jsoncpl [OPTIONS] [FOLDERS]...
+A tool for linting and formatting json files
 
-ARGS:
-    <FOLDERS>...
-            List the folders to search for files to lint and compare
+Usage: jsoncpl.exe [OPTIONS] <COMMAND>
 
-OPTIONS:
-        --format
-            Whether the files should be automatically formatted
+Commands:
+  format
+          Format the provided files according to the style parameters
+  lint
+          Check the provided files according to the style parameters
+  help
+          Print this message or the help of the given subcommand(s)
 
-    -h, --help
-            Print help information
+Options:
+  -a, --algorithm <ALGORITHM>
+          The expected sorting algorithm for keys in the json file
+          
+          [default: default]
 
-        --indent <INDENT>
-            The expected indentation of the json files
-            
-            [default: 4]
+          Possible values:
+          - natural: Sort the keys by natural sort
+          - default: Sort the keys by classical sort
+          - ignore:  Ignore sort order
 
-    -o, --order <ORDER>
-            The expected sort order for keys in the json file
-            
-            [default: asc]
-            [possible values: asc, desc]
+  -o, --order <ORDER>
+          The expected sort order for keys in the json file
+          
+          [default: asc]
 
-    -s, --sort <SORT>
-            The expected sorting algorithm for keys in the json file
-            
-            [default: default]
-            [possible values: natural, default]
+          Possible values:
+          - asc:  Sort the keys by ascending order
+          - desc: Sort the keys by descending order
 
-        --skip-check-order
-            Whether the key order check should be skipped
+  -l, --line-endings <LINE_ENDINGS>
+          The expected line endings of the json file
+          
+          [default: lf]
 
-        --skip-check-parity
-            Whether the key parity check should be skipped
+          Possible values:
+          - crlf:   Add \\r\\n to the end of an entry
+          - lf:     Add \\n to the end of an entry
+          - none:   Add no linebreaks
+          - any:    Accept any linebreak (\r\n or \n) (defaults to \n in formatting)
+          - ignore: Accept anything (defaults to \n in formatting)
 
-        --skip-check-style
-            Whether the style check should be skipped
+  -i, --indent <INDENT>
+          The expected indentation of the json files
+          
+          [default: four]
 
-    -V, --version
-            Print version information
+          Possible values:
+          - tab:    Indent with \t
+          - two:    Indent with "  "
+          - four:   Indent with "    "
+          - ignore: Ignore indentation
+
+  -h, --help
+          Print help information (use `-h` for a summary)
+
+  -V, --version
+          Print version information
 ```
 
 ## Installation
