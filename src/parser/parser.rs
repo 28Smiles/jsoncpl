@@ -373,10 +373,10 @@ impl Parser {
                         JsonStyle::STYLED { order, sort_algorithm, .. } => {
                             match (order, match sort_algorithm {
                                 SortAlgorithm::NATURAL => {
-                                    crate::natural_sort::compare(key.value, kv.0.value)
+                                    crate::natural_sort::compare(kv.0.value, key.value)
                                 }
                                 SortAlgorithm::NORMAL => {
-                                    key.value.cmp(kv.0.value)
+                                    kv.0.value.cmp(key.value)
                                 }
                                 SortAlgorithm::NONE => {
                                     Ordering::Greater
@@ -677,6 +677,46 @@ mod test {
         let result = parser.parse_object(span, 0, &mut style_errors);
         assert_eq!(result.is_ok(), true);
         assert_eq!(style_errors.len(), 0);
+    }
+
+    #[test]
+    fn sorted_normal_ok() {
+        let span = Span::new(
+            "{\"a\": \"x\", \"b\": \"x\", \"c\": \"x\"}"
+        );
+        let parser = Parser {
+            style: JsonStyle::STYLED {
+                line_endings: LineEnding::IGNORE,
+                indentation: None,
+                post_colon: None,
+                order: SortOrder::ASC,
+                sort_algorithm: SortAlgorithm::NORMAL,
+            },
+        };
+        let mut style_errors = Vec::new();
+        let result = parser.parse_object(span, 0, &mut style_errors);
+        assert_eq!(result.is_ok(), true);
+        assert_eq!(style_errors.len(), 0);
+    }
+
+    #[test]
+    fn sorted_normal_err() {
+        let span = Span::new(
+            "{\"b\": \"x\", \"a\": \"x\", \"c\": \"x\"}"
+        );
+        let parser = Parser {
+            style: JsonStyle::STYLED {
+                line_endings: LineEnding::IGNORE,
+                indentation: None,
+                post_colon: None,
+                order: SortOrder::ASC,
+                sort_algorithm: SortAlgorithm::NORMAL,
+            },
+        };
+        let mut style_errors = Vec::new();
+        let result = parser.parse_object(span, 0, &mut style_errors);
+        assert_eq!(result.is_ok(), true);
+        assert_eq!(style_errors.len(), 1);
     }
 
     #[test]
