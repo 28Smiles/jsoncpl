@@ -113,7 +113,7 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
             compare(&mut compare_warnings, &acc, object, &Vec::new());
             for compare_warning in compare_warnings {
                 warnings.push(format!(
-                    "[{}] Cant find key `{}` in file {}",
+                    "[{}] Can not find key `{}` in file {}",
                     "PAIRITY".yellow(),
                     compare_warning.iter()
                         .map(|p| format!("\"{}\"", p.value))
