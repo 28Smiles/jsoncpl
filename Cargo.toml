@@ -8,7 +8,6 @@ authors = [ "Leon Camus" ]
 nom = "7"
 nom_locate = "4"
 similar = "2"
-colour = "0"
 colored = "2"
 clap = { version = "4", features = ["derive"] }
 pathdiff = "0"
