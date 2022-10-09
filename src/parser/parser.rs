@@ -48,7 +48,7 @@ mod error {
             NO_BREAK => Some(format!("expected no linebreaks")),
             ANY_BREAK => Some(format!("expected any linebreak at the end of a line")),
             CR_BUT_NOT_LF => Some(format!("expected \"{}\" after \"{}\"", "\\n".yellow(), "\\r".yellow())),
-            NOT_ENOUGH_INDENTATION => Some(format!("expected less indentation")),
+            NOT_ENOUGH_INDENTATION => Some(format!("expected more indentation")),
             TOO_MUCH_INDENTATION => Some(format!("expected less indentation")),
             SORTING => Some(format!("expected the key to be greater than its predecessor")),
             _ => None,
