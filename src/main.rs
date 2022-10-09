@@ -45,7 +45,7 @@ fn cli_to_style(cli: &Cli) -> JsonStyle {
 
 fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) {
     let (file_types, errors) = file_parity(folders);
-    println!("{}", errors.join("\n\n"));
+    println!("{}", errors.join("\n"));
 
     let style = cli_to_style(&cli);
     for file_type in file_types {
@@ -54,11 +54,11 @@ fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) {
             .collect::<Vec<_>>();
         let mut jsons = loaded_files.iter().map(|file| {
             let (json, errors) = file_style(&style, file).unwrap();
-            println!("{}", errors.join("\n\n"));
+            println!("{}", errors.join("\n"));
 
             (file, json)
         }).collect::<Vec<_>>();
-        println!("{}", entry_parity(&mut jsons).join("\n\n"));
+        println!("{}", entry_parity(&mut jsons).join("\n"));
     }
 }
 
