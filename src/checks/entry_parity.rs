@@ -118,7 +118,7 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
                     compare_warning.iter()
                         .map(|p| format!("\"{}\"", p.value))
                         .collect::<Vec<_>>()
-                        .join(".").blue(),
+                        .join("->").bold(),
                     file.path().to_str().unwrap().green(),
                 ));
             }

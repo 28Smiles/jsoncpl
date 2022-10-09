@@ -28,8 +28,8 @@ pub fn file_parity<'a>(
             errors.push(format!(
                 "[{}] File \"{}\" not found in folder \"{}\"",
                 "NOT FOUND".yellow(),
-                not_found.to_str().unwrap().blue(),
-                folder.to_str().unwrap().blue(),
+                not_found.to_str().unwrap().green(),
+                folder.to_str().unwrap().green(),
             ));
         }
     }
