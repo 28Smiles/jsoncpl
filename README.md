@@ -72,8 +72,8 @@ Options:
           [default: lf]
 
           Possible values:
-          - crlf:   Add \\r\\n to the end of an entry
-          - lf:     Add \\n to the end of an entry
+          - crlf:   Add \r\n to the end of an entry
+          - lf:     Add \n to the end of an entry
           - none:   Add no linebreaks
           - any:    Accept any linebreak (\r\n or \n) (defaults to \n in formatting)
           - ignore: Accept anything (defaults to \n in formatting)

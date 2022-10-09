@@ -58,9 +58,9 @@ pub enum SortOrder {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum LineEnding {
-    /// Add \\r\\n to the end of an entry
+    /// Add \r\n to the end of an entry
     CRLF,
-    /// Add \\n to the end of an entry
+    /// Add \n to the end of an entry
     LF,
     /// Add no linebreaks
     NONE,
