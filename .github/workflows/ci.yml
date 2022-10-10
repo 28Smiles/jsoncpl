@@ -1,0 +1,102 @@
+name: ci
+
+on:
+  push:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone
+      - uses: actions-rs/toolchain@v1
+        name: Setup Rust
+        with:
+          toolchain: stable
+          override: true
+      - name: Run tests
+        run: cargo test --verbose
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-20.04", "windows-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
+    needs:
+      - test
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone
+      - uses: actions-rs/toolchain@v1
+        name: Setup Rust
+        with:
+          toolchain: stable
+          override: true
+      - name: Build
+        run: cargo build --verbose --release
+      - name: Create artifacts
+        if: matrix.os == 'ubuntu-20.04' || matrix.os == 'macos-latest'
+        run: |
+          mkdir ${{ matrix.os }}
+          cp target/release/jsoncpl ${{ matrix.os }}/jsoncpl
+      - name: Create artifacts
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir ${{ matrix.os }}
+          cp target/release/jsoncpl.exe ${{ matrix.os }}/jsoncpl.exe
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}
+          path: ${{ matrix.os }}
+  release:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v3
+        name: Clone
+      - uses: actions/download-artifact@master
+        with:
+          name: ubuntu-20.04
+          path: ./ubuntu-20.04/
+      - name: Create artifacts
+        run: |
+          cd ubuntu-20.04
+          zip jsoncpl-linux.zip jsoncpl
+          tar -cvzf jsoncpl-linux.tar.gz jsoncpl
+          rm jsoncpl
+          cd ..
+      - uses: actions/download-artifact@master
+        with:
+          name: windows-latest
+          path: ./windows-latest/
+      - name: Create artifacts
+        run: |
+          cd windows-latest
+          zip jsoncpl-windows.zip jsoncpl.exe
+          tar -cvzf jsoncpl-windows.tar.gz jsoncpl.exe
+          rm jsoncpl.exe
+          cd ..
+      - uses: actions/download-artifact@master
+        with:
+          name: macos-latest
+          path: ./macos-latest/
+      - name: Create artifacts
+        run: |
+          cd macos-latest
+          zip jsoncpl-macos.zip jsoncpl
+          tar -cvzf jsoncpl-macos.tar.gz jsoncpl
+          rm jsoncpl
+          cd ..
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: |
+            ubuntu-20.04/*
+            windows-latest/*
+            macos-latest/*
+            LICENSE
+            README.md
