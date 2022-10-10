@@ -7,12 +7,9 @@ authors = [ "Leon Camus" ]
 [dependencies]
 nom = "7"
 nom_locate = "4"
-similar = "2"
 colored = "2"
 clap = { version = "4", features = ["derive"] }
 pathdiff = "0"
-unescape = "0"
-snailquote = "0"
 num-bigint = "0"
 
 [dev-dependencies]
