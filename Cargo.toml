@@ -12,10 +12,6 @@ clap = { version = "4", features = ["derive"] }
 pathdiff = "0"
 num-bigint = "0"
 
-[dev-dependencies]
-indexmap = "1.9"
-serde_json = { version = "1.0", features = ["preserve_order"] }
-
 [profile.release]
 lto = true
 debug = false
