@@ -98,4 +98,16 @@ Options:
 
 ## Installation
 
+### Download
+
 We provide binary releases for Linux, Windows and OSX.
+
+### Build from Source
+
+You need to install the rust toolchain beforehand, then clone the repo and use cargo to build the artifacts:
+```sh
+git clone https://github.com/28Smiles/jsoncpl.git
+cd jsoncpl
+cargo build --release
+./target/release/jsoncpl
+```
