@@ -596,7 +596,6 @@ mod test {
         let mut style_errors = Vec::new();
         let result = parser.parse_object(span, 0, &mut style_errors);
         assert_eq!(result.is_ok(), true);
-        println!("{:#?}", &style_errors);
         assert_eq!(style_errors.len(), 0);
     }
 
@@ -615,7 +614,6 @@ mod test {
         let mut style_errors = Vec::new();
         let result = parser.parse_object(span, 0, &mut style_errors);
         assert_eq!(result.is_ok(), true);
-        println!("{:#?}", &style_errors);
         assert_eq!(style_errors.len(), 0);
     }
 
