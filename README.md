@@ -100,7 +100,7 @@ Options:
 
 ### Download
 
-We provide binary releases for Linux, Windows and OSX.
+We provide binary [releases](https://github.com/28Smiles/jsoncpl/releases) for Linux, Windows and OSX.
 
 ### Build from Source
 
