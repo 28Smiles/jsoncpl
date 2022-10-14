@@ -111,3 +111,34 @@ cd jsoncpl
 cargo build --release
 ./target/release/jsoncpl
 ```
+
+## Example Output
+```
+[STYLE] In line 53 at offset 4, I expected the key to be greater than its predecessor
+ test1/en\common.json
+ [51]    }
+ [52]  },
+ [53]  "introduction": {
+ [54]    "HIDE_INTRO": "Hide introduction",
+ [55]    "INTRODUCTION": "Introduction"
+[PAIRITY] Found different value types for key "introduction"
+test1/de\common.json
+ [3]  "HELLO_WORLD": "Hallo Welt!",
+ [4]  "OUTGOING_WEBSOCKET_MESSAGES_ARE_NOT_TRACKED": "Ausgehende Nachrichten werden nicht aufgezeichnet",
+ [5]  "introduction": "???",
+ [6]  "shared": {
+ [7]    "error": {
+test1/en\common.json
+ [51]    }
+ [52]  },
+ [53]  "introduction": {
+ [54]    "HIDE_INTRO": "Hide introduction",
+ [55]    "INTRODUCTION": "Introduction"
+ [56]  }
+ [57]}
+[PAIRITY] Can not find key `"shared"->"save"->"MARKED_READ"` in file test1/de\common.json
+[PAIRITY] Can not find key `"shared"->"save"->"MARK_READ"` in file test1/de\common.json
+[PAIRITY] Can not find key `"WEBSOCKET_EXAMPLE"` in file test1/de\common.json
+[PAIRITY] Can not find key `"shared"->"save"->"MARKED_AS_READ"` in file test1/en\common.json
+[PAIRITY] Can not find key `"shared"->"save"->"MARK_AS_READ"` in file test1/en\common.json
+```
