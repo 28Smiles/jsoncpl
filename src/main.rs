@@ -43,7 +43,7 @@ fn cli_to_style(cli: &Cli) -> JsonStyle {
     }
 }
 
-fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) {
+fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) -> bool {
     let (file_types, errors) = file_parity(folders);
     println!("{}", errors.join("\n"));
 
@@ -60,6 +60,8 @@ fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) {
         }).collect::<Vec<_>>();
         println!("{}", entry_parity(&mut jsons).join("\n"));
     }
+
+    errors.is_empty()
 }
 
 fn format(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) {
@@ -86,7 +88,9 @@ fn main() {
         }
         Commands::Lint { folders } => {
             let folders = read_folders(folders);
-            lint(cli, folders);
+            if !lint(cli, folders) {
+                panic!("Linting failed");
+            }
         }
     }
 }
