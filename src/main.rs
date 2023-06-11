@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use clap::Parser;
+use colored::Colorize;
 use crate::checks::entry_parity::entry_parity;
 use crate::checks::file_parity::file_parity;
 use crate::checks::file_style::file_style;
@@ -44,8 +45,8 @@ fn cli_to_style(cli: &Cli) -> JsonStyle {
 }
 
 fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) -> bool {
-    let (file_types, errors) = file_parity(folders);
-    println!("{}", errors.join("\n"));
+    let mut errors = Vec::new();
+    let file_types = file_parity(folders, &mut errors);
 
     let style = cli_to_style(&cli);
     for file_type in file_types {
@@ -53,12 +54,18 @@ fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) -> bool {
             .map(|file| file.load())
             .collect::<Vec<_>>();
         let mut jsons = loaded_files.iter().map(|file| {
-            let (json, errors) = file_style(&style, file).unwrap();
-            println!("{}", errors.join("\n"));
+            let json = file_style(&style, file, &mut errors).unwrap();
 
             (file, json)
         }).collect::<Vec<_>>();
-        println!("{}", entry_parity(&mut jsons).join("\n"));
+        let warnings = entry_parity(&mut jsons);
+        if warnings.len() > 0 {
+            println!("{}", warnings.join("\n"));
+        }
+    }
+
+    if errors.len() > 0 {
+        println!("{}", errors.join("\n"));
     }
 
     errors.is_empty()
@@ -89,7 +96,8 @@ fn main() {
         Commands::Lint { folders } => {
             let folders = read_folders(folders);
             if !lint(cli, folders) {
-                panic!("Linting failed");
+                println!("\n{}", "Linting failed".red());
+                std::process::exit(1);
             }
         }
     }

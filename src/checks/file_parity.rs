@@ -4,9 +4,9 @@ use colored::Colorize;
 use crate::io::File;
 
 pub fn file_parity<'a>(
-    files: Vec<(PathBuf, Vec<File>)>
-) -> (Vec<Vec<File>>, Vec<String>) {
-    let mut errors = Vec::new();
+    files: Vec<(PathBuf, Vec<File>)>,
+    errors: &mut Vec<String>,
+) -> Vec<Vec<File>> {
     let mut reference_content: BTreeSet<PathBuf> = BTreeSet::new();
     for (folder, files) in &files {
         for file in files {
@@ -34,5 +34,5 @@ pub fn file_parity<'a>(
         }
     }
 
-    (files_of_type.into_iter().map(|(_, files)| files).collect(), errors)
+    files_of_type.into_iter().map(|(_, files)| files).collect()
 }
