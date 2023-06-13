@@ -53,8 +53,10 @@ fn compare<'a, 'b>(
     }
 }
 
-pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<String> {
-    let mut warnings = Vec::new();
+pub fn entry_parity<'a>(
+    files: &Vec<(&'a LoadedFile, JsonObject<'a>)>,
+    errors: &mut Vec<String>,
+) {
     if let Some(((_, l_object), right)) = files.split_first() {
         let mut acc = l_object.clone();
         for (r_file, r_object) in right {
@@ -72,7 +74,7 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
                         let r_path = r_file.path();
                         let r_content = r_file.content();
 
-                        warnings.push(format!(
+                        errors.push(format!(
                             "[{}] Found different value types for key \"{}\"\n{}\n{}\n{}\n{}",
                             "PAIRITY".yellow(),
                             key.value,
@@ -93,7 +95,7 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
                         let r_path = r_file.path();
                         let r_content = r_file.content();
 
-                        warnings.push(format!(
+                        errors.push(format!(
                             "[{}] Found different value types for key \"{}\"\n{}\n{}\n{}\n{}",
                             "PAIRITY".yellow(),
                             key.value,
@@ -112,7 +114,7 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
             let mut compare_warnings = Vec::new();
             compare(&mut compare_warnings, &acc, object, &Vec::new());
             for compare_warning in compare_warnings {
-                warnings.push(format!(
+                errors.push(format!(
                     "[{}] Can not find key `{}` in file {}",
                     "PAIRITY".yellow(),
                     compare_warning.iter()
@@ -124,6 +126,4 @@ pub fn entry_parity<'a>(files: &Vec<(&'a LoadedFile, JsonObject<'a>)>) -> Vec<St
             }
         }
     }
-
-    warnings
 }

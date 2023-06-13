@@ -58,10 +58,7 @@ fn lint(cli: Cli, folders: Vec<(PathBuf, Vec<File>)>) -> bool {
 
             (file, json)
         }).collect::<Vec<_>>();
-        let warnings = entry_parity(&mut jsons);
-        if warnings.len() > 0 {
-            println!("{}", warnings.join("\n"));
-        }
+        entry_parity(&mut jsons, &mut errors);
     }
 
     if errors.len() > 0 {
